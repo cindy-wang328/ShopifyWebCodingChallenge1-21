@@ -1,4 +1,6 @@
 # ShopifyWebCodingChallenge1-21
+update: TOO MANY REQUESTS ERROR????????
+
 
 My submission for Shopify's frontend coding challenge
 
