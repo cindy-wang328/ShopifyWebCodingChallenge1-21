@@ -131,7 +131,7 @@
 			return; // cant call api or else it says invalid imdb id
 		}
 		// Call the API
-		fetch('http://www.omdbapi.com/?apikey=4c2bb7d3&type=movie&s=' + $("#searchBox").val())
+		fetch('https://www.omdbapi.com/?apikey=4c2bb7d3&type=movie&s=' + $("#searchBox").val())
 		.then(function (response) {
 		    return response.json();
 		  })
