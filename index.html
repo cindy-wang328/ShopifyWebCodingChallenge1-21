@@ -131,7 +131,8 @@
 			return; // cant call api or else it says invalid imdb id
 		}
 		// Call the API
-		fetch('https://www.omdbapi.com/?apikey=4c2bb7d3&type=movie&s=' + $("#searchBox").val())
+		// https://stackoverflow.com/questions/47939548/github-pages-website-is-on-https-but-rest-api-is-on-http
+		fetch('https://cors-anywhere.herokuapp.com/https://www.omdbapi.com/?apikey=4c2bb7d3&type=movie&s=' + $("#searchBox").val())
 		.then(function (response) {
 		    return response.json();
 		  })
