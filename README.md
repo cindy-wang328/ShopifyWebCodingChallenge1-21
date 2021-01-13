@@ -1,4 +1,4 @@
-# ShopifyWebCodingChallenge1-21
+# Shopify Frontend Challenge 2021
 
 My submission for Shopify's frontend coding challenge
 
