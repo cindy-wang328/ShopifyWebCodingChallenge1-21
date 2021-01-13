@@ -1,0 +1,192 @@
+<html>
+<head>
+	<title>The Shoppies</title>
+	<!-- Bootstrap -->
+	<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+</head>
+<body>
+
+	<div class="container">
+		<h1 style="margin-top:10%"> The Shoppies </h1>
+		<div class="jumbotron p-3  bg-dark" >
+			<h2>Movie title</h2>
+			<div class="row p-3">
+				<span class="glyphicon glyphicon-search col-1"></span>
+				<input id="searchBox" class="input-lg" style="width:90%" type="text" placeholder="Movie Title">
+			</div>
+		</div>
+		<div class="alert alert-success" role="alert" id="atLeast5Alert">
+		   Thank you! You have finished nominating 5 movies.
+		</div>
+		<div class="row mb-2">
+			<div class="col-md-6 bg-dark">
+				<h3 id="searchResultsText">No search results</h3>
+				<ul id="result" class="card flex-md-col mb-4"></ul>
+			</div>
+			<div class="col-md-6 bg-light text-dark">
+				<h3> Nominated</h3>
+				<ul id="nominated" class="card flex-md-col mb-4" ></ul>
+			</div>
+		</div> 
+
+	</div>
+
+	
+
+<script>
+	var nominated = {}; // imdb id -> nominated result
+	var nCount = 0;
+	var ALERT_COUNT = 5;
+	var searchResultsList = [];
+	//var searchResults = {}; // imdb id -> search result
+	$(document).ready(function(){ // Load previous nominated results
+		if(nCount < ALERT_COUNT) $("#atLeast5Alert").hide();
+
+		if(window.localStorage["nominated"]) {
+			nominated = JSON.parse(window.localStorage["nominated"]);
+			for(const imdbID in nominated){
+				addToNominated(imdbID, true);
+			}
+		}
+		if(window.localStorage["lastSearch"] ){
+			$("#searchBox").val(window.localStorage["lastSearch"]).trigger("input");
+		}
+	})
+
+	function setMoreThan5Alert(){
+			$("#atLeast5Alert").show();
+			// Disable all existing nominate buttons
+			for(let j = 0; j < searchResultsList.length; j++){
+				if(!nominated.hasOwnProperty(searchResultsList[j]))
+				$("#nBtn_"+searchResultsList[j]).attr("disabled", true).text("Max 5 nominations");
+			}
+	}
+	function removeMoreThan5Alert(){
+					$("#atLeast5Alert").hide();
+			// Enable all existing nominate buttons if it's not nominated
+			for(let j = 0; j < searchResultsList.length; j++){
+				if(!nominated.hasOwnProperty(searchResultsList[j]))
+				$("#nBtn_"+searchResultsList[j]).attr("disabled", false).text("Nominate");
+			}
+	}
+	function resetSearchResult(){
+		console.log("reset");
+			$("#searchResultsText").text("No search results");
+		    searchResultsList = [];
+		    $("#result").empty(); 
+		    window.localStorage["lastSearch"] = $("#searchBox").val(); 
+	}
+
+	function addToNominated(imdbID, isInitialization){
+		let item = nominated[imdbID];
+		let rmBtn = $(document.createElement("button"));
+		rmBtn.addClass("btn btn-primary");
+		rmBtn.text("Remove");
+		rmBtn.click(function(){
+			delete nominated[imdbID];
+			if(window.localStorage["nominated"]) {
+    			window.localStorage["nominated"] = JSON.stringify(nominated);
+			}
+			
+			$("#nBtn_"+ imdbID).attr("disabled", false);
+			$("#nBtn_"+ imdbID).text("Nominate");
+			$("#n_li_"+imdbID).remove(); // remove the <li>
+			nCount--;
+			if(nCount < ALERT_COUNT) removeMoreThan5Alert();
+
+		});
+		let cardBody = $(document.createElement("div"));
+		cardBody.addClass("card-body col-sm-6");
+		cardBody.append($(document.createElement("h4")).text(item["Title"]).addClass("card-title"));
+		cardBody.append($(document.createElement("p")).text("(" + item["Year"] + ")").addClass("card-text"));
+
+		cardBody.append(rmBtn);
+		$("#nominated").append(
+			$(document.createElement("li"))
+			.addClass("card row bg-dark")
+			.attr("id", "n_li_"+ imdbID)
+			.append(cardBody)
+			.append(
+				$(document.createElement("img"))
+				.attr("src", item["Poster"])
+				.attr("alt", "Poster for " + item["Title"])
+				.addClass("card-img-right col-sm-2")
+			)
+		);
+		nCount++;
+		if(nCount >= ALERT_COUNT) {
+			setMoreThan5Alert();
+
+		}
+	}
+
+
+	$("#searchBox").on("input", function(e){
+		if($("#searchBox").val().length == 0) {
+			resetSearchResult();
+			return; // cant call api or else it says invalid imdb id
+		}
+		// Call the API
+		fetch('http://www.omdbapi.com/?apikey=4c2bb7d3&type=movie&s=' + $("#searchBox").val())
+		.then(function (response) {
+		    return response.json();
+		  })
+		  .then(function (myJson) {
+		  	resetSearchResult();
+		    $("#searchResultsText").text("Results for \"" + $("#searchBox").val() + "\"")
+		    if(myJson["Response"] == "False"){
+		    	var p = $(document.createElement("p"));
+		    	p.text(myJson["Error"]);
+		    	$("#result").append(p);
+
+		    }else{
+		    	for(let i = 0; i < myJson["Search"].length; i++){
+		    		let curResult = myJson["Search"][i];
+		    		searchResultsList.push(curResult["imdbID"]);
+		    		var nominateBtn = $(document.createElement("button"));
+    				nominateBtn.addClass("btn btn-primary");
+    				nominateBtn.attr("disabled", nominated.hasOwnProperty(curResult["imdbID"]) || nCount >= ALERT_COUNT);
+    				nominateBtn.attr("id", "nBtn_" + curResult["imdbID"]);
+    				nominateBtn.text(nominated.hasOwnProperty(curResult["imdbID"]) ? "Nominated" : (
+    					nCount >= ALERT_COUNT ? "Max 5 nominations" : "Nominate"));
+    				nominateBtn.click(function(){
+    					this.setAttribute("disabled", true);
+    					this.textContent = "Nominated";
+    					nominated[curResult["imdbID"]] = curResult;
+    					window.localStorage["nominated"] = JSON.stringify(nominated);
+    					addToNominated(curResult["imdbID"]);
+    				});
+
+    				var textCard = $(document.createElement("div"));
+    				textCard.addClass("card-body col-sm-6");
+					textCard.append($(document.createElement("h4")).text(curResult["Title"]).addClass("card-title"));
+					textCard.append($(document.createElement("p")).text("(" + curResult["Year"] + ")").addClass("card-text"));
+    				textCard.append(nominateBtn);
+
+		    		$("#result").append(
+		    			$(document.createElement("li"))
+		    			.addClass("card row")
+		    			.append(textCard)
+		    			.append(
+		    				$(document.createElement("img"))
+		    				.attr("src", curResult["Poster"])
+		    				.attr("alt", "Poster for " + curResult["Title"])
+		    				.addClass("card-img-right col-sm-2")
+
+		    			)
+		    		);
+		    	}
+		    }
+		  })
+		  .catch(function (error) {
+		    console.log("Error: " + error.stack);
+		  });
+	})
+</script>
+</body>
+</html>
+
