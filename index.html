@@ -1,6 +1,6 @@
 <html>
 <head>
-	    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"> 
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"> 
 
     <title>The Shoppies</title>
     <link rel="icon" href="icon.png">
@@ -15,16 +15,21 @@
 <body>
 
 <div class="container">
+	<textarea id="copyTextArea" style="display: none"></textarea>
     <h1 style="margin-top:10%"> The Shoppies </h1>
-    <div class="jumbotron p-3  bg-dark">
+    <div class="jumbotron" >
         <h2>Movie title</h2>
-        <div class="row p-3">
+        <div class="row p-2">
             <span class="glyphicon glyphicon-search col-1"></span>
-            <input id="searchBox" class="input-lg" style="width:90%" type="text" placeholder="Movie Title">
+            <input id="searchBox" class="input-lg" style="width:80%" type="text" placeholder="ex. avengers, harry potter, star wars...">
+            <button class="btn btn-info btn-lg" id="clearSearchBtn" type="button">Clear</button>
         </div>
     </div>
     <div class="alert alert-success" role="alert" id="atLeast5Alert">
         Thank you! You have finished nominating 5 movies.
+    </div>
+    <div class="alert alert-warning" role="alert" id="lessThan5Alert">
+        You can nominate up to 5 movies.
     </div>
     <div class="row mb-2">
         <div class="col-md-6 bg-dark">
@@ -32,8 +37,12 @@
             <ul id="result" class="card flex-md-col mb-4"></ul>
         </div>
         <div class="col-md-6 bg-light text-dark">
-            <h3> Nominated</h3>
-            <ul id="nominated" class="card flex-md-col mb-4"></ul>
+        	<div class="row">
+        		<span class="col-md-6" ><h3 id="nominatedText">Nominated (0/5)</h3></span>
+        		<span class="col-md-2"><button style="margin-top: 20%;"class="btn btn-info" id="clearNomsBtn" type="button">Remove All</button></span>
+        	</div>
+            
+            <ol id="nominated" class="card flex-md-col mb-4"></ol>
         </div>
     </div>
 
@@ -41,17 +50,23 @@
 
 
 <script>
-var nominated = {}; // imdb id -> nominated result; using imdb ids to identify the movies and set html ids
-var nCount = 0; // nominated count
-var ALERT_COUNT = 5; // Constant for 5, previously I thought we just display something when they're above 5 but still let them keep nominating, so it got named alert count
-var searchResultsList = []; // imdb ids of current search results
-$(document).ready(function () { // Load previous nominated results and previous search from localstorage
+var nominated = {}; // imdb id -> nominated result
+var nCount = 0;
+var ALERT_COUNT = 5;
+var searchResultsList = [];
+//var searchResults = {}; // imdb id -> search result
+$(document).ready(function () { // Load previous nominated results
+	  $('[data-toggle="popover"]').popover();   
+
 	if (nCount < ALERT_COUNT) $("#atLeast5Alert").hide();
+	if(nCount == 0) {
+		$("#clearNomsBtn").hide();
+	}
 
 	if (window.localStorage["nominated"]) {
 		nominated = JSON.parse(window.localStorage["nominated"]);
 		for (const imdbID in nominated) {
-			addToNominated(imdbID, true);
+			addToNominated(imdbID);
 		}
 	}
 	if (window.localStorage["lastSearch"]) {
@@ -59,8 +74,10 @@ $(document).ready(function () { // Load previous nominated results and previous 
 	}
 })
 
+
 function setMoreThan5Alert() {
 	$("#atLeast5Alert").show();
+	$("#lessThan5Alert").hide();
 	// Disable all existing nominate buttons, change text if it's not nominated
 	for (let j = 0; j < searchResultsList.length; j++) {
 		if (!nominated.hasOwnProperty(searchResultsList[j]))
@@ -70,6 +87,7 @@ function setMoreThan5Alert() {
 
 function removeMoreThan5Alert() {
 	$("#atLeast5Alert").hide();
+	$("#lessThan5Alert").show();
 	// Enable all existing nominate buttons if it's not nominated
 	for (let j = 0; j < searchResultsList.length; j++) {
 		if (!nominated.hasOwnProperty(searchResultsList[j]))
@@ -83,24 +101,30 @@ function resetSearchResult() {
 	window.localStorage["lastSearch"] = $("#searchBox").val();
 }
 
-function addToNominated(imdbID, isInitialization) {
+function removeNomination(imdbID){
+	delete nominated[imdbID];
+	if (window.localStorage["nominated"]) {
+		window.localStorage["nominated"] = JSON.stringify(nominated);
+	}
+
+	$("#nBtn_" + imdbID).attr("disabled", false);
+	$("#nBtn_" + imdbID).text("Nominate");
+	$("#n_li_" + imdbID).remove(); // remove the <li>
+	nCount--;
+	$("#nominatedText").text("Nominated (" + nCount + "/" + ALERT_COUNT + ")");
+
+	if (nCount < ALERT_COUNT) removeMoreThan5Alert();
+	if(nCount == 0) {
+		$("#clearNomsBtn").hide();
+	}
+}
+
+function addToNominated(imdbID) {
 	let item = nominated[imdbID];
 	let rmBtn = $(document.createElement("button"));
 	rmBtn.addClass("btn btn-primary");
 	rmBtn.text("Remove");
-	rmBtn.click(function () {
-		delete nominated[imdbID];
-		if (window.localStorage["nominated"]) {
-			window.localStorage["nominated"] = JSON.stringify(nominated); // already deleted from "nominated" 
-		}
-
-		$("#nBtn_" + imdbID).attr("disabled", false);
-		$("#nBtn_" + imdbID).text("Nominate");
-		$("#n_li_" + imdbID).remove(); // remove the <li>
-		nCount--;
-		if (nCount < ALERT_COUNT) removeMoreThan5Alert();
-
-	});
+	rmBtn.click(function(){removeNomination(imdbID)});
 	let cardBody = $(document.createElement("div"));
 	cardBody.addClass("card-body col-sm-6");
 	cardBody.append($(document.createElement("h4")).text(item["Title"]).addClass("card-title"));
@@ -120,10 +144,26 @@ function addToNominated(imdbID, isInitialization) {
 		)
 	);
 	nCount++;
+	$("#clearNomsBtn").show();
+	$("#nominatedText").html("Nominated (" + nCount + "/" + ALERT_COUNT + ")");
+
 	if (nCount >= ALERT_COUNT) {
 		setMoreThan5Alert();
+
 	}
 }
+
+$("#clearNomsBtn").click(function(){
+	for (id in nominated){
+		removeNomination(id);
+	}
+})
+
+$("#clearSearchBtn").click(function () {
+	resetSearchResult();
+	$("#searchBox").val("").trigger("input");
+})
+
 
 $("#searchBox").on("input", function (e) {
 	let searchVal = $("#searchBox").val();
@@ -153,9 +193,7 @@ $("#searchBox").on("input", function (e) {
 				for (let i = 0; i < myJson["Search"].length; i++) {
 					let curResult = myJson["Search"][i];
 					searchResultsList.push(curResult["imdbID"]); // this list used to enable/disable when max 5 is reached
-					
-					// Nominate button
-					var nominateBtn = $(document.createElement("button"));
+					var nominateBtn = $(document.createElement("button"));// Nominate button
 					nominateBtn.addClass("btn btn-primary");
 					nominateBtn.attr("disabled", nominated.hasOwnProperty(curResult["imdbID"]) || nCount >= ALERT_COUNT);
 					nominateBtn.attr("id", "nBtn_" + curResult["imdbID"]);
@@ -168,7 +206,6 @@ $("#searchBox").on("input", function (e) {
 						window.localStorage["nominated"] = JSON.stringify(nominated);
 						addToNominated(curResult["imdbID"]);
 					});
-					
 					// Text with title and year 
 					var textCard = $(document.createElement("div"));
 					textCard.addClass("card-body col-sm-6");
