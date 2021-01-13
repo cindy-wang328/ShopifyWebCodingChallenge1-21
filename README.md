@@ -17,5 +17,5 @@ Used Bootstrap because of the grid layout system and vanilla JS / jQuery because
 
 ![Screenshot with 5 nominations](https://raw.githubusercontent.com/cindy-wang328/ShopifyWebCodingChallenge1-21/main/5_nominations_screenshot_new.png)
 
-![Screenshot with 4 nominations](https://raw.githubusercontent.com/cindy-wang328/ShopifyWebCodingChallenge1-21/main/no_banner_screenshot.png)
+![Screenshot with 4 nominations](https://raw.githubusercontent.com/cindy-wang328/ShopifyWebCodingChallenge1-21/main/3_screenshot_new.png)
 
