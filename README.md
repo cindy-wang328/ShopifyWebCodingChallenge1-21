@@ -1,7 +1,11 @@
 # ShopifyWebCodingChallenge1-21
+
 My submission for Shopify's frontend coding challenge
+
 Instructions: https://docs.google.com/document/d/1AZO0BZwn1Aogj4f3PDNe1mhq8pKsXZxtrG--EIbP_-w/edit
+
 Assumptions: The instructions says "When they've selected 5 nominees they should be notified they're **finished**", so I did not allow them to nominate anything after there have been 5 nominated.
+
 Extra features:
 - Included image from the API if it exists
 - Saves both the last search and the nominated list in Local Storage so if page reloads they will still be there
