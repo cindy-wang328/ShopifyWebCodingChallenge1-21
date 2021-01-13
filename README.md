@@ -10,6 +10,8 @@ Extra features not in instructions:
 - Included image from the API if it exists
 - Saves both the last search and the nominated list in Local Storage so if page reloads they will still be there
 - Button text changes to "Nominated" or "Max 5 nominations" when necessary
+- Search result title changes to "No results for" and the error message, if there are no results
+- Clear search and Remove all nominations buttons
 
 Used Bootstrap because of the grid layout system and vanilla JS / jQuery because it is easy to set up and run on Github Pages. (Also left api key in the code so it is easier to set up on github pages.. at my last co-op the keys were environment variables)
 
