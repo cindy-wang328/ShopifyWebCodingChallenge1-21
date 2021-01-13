@@ -15,7 +15,7 @@ Extra features not in instructions:
 
 Used Bootstrap because of the grid layout system and vanilla JS / jQuery because it is easy to set up and run on Github Pages. (Also left api key in the code so it is easier to set up on github pages.. at my last co-op the keys were environment variables)
 
-![Screenshot with 5 nominations](https://raw.githubusercontent.com/cindy-wang328/ShopifyWebCodingChallenge1-21/main/5_nominations_screenshot.png)
+![Screenshot with 5 nominations](https://raw.githubusercontent.com/cindy-wang328/ShopifyWebCodingChallenge1-21/main/5_nominations_screenshot_new.png)
 
 ![Screenshot with 4 nominations](https://raw.githubusercontent.com/cindy-wang328/ShopifyWebCodingChallenge1-21/main/no_banner_screenshot.png)
 
