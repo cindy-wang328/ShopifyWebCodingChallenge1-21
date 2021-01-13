@@ -1,6 +1,6 @@
 # Shopify Frontend Challenge 2021
 
-My submission for Shopify's frontend coding challenge
+My submission for Shopify's frontend coding challenge (Github Pages: cindy-wang328.github.io/shopifywebcodingchallenge1-21/)
 
 Instructions: https://docs.google.com/document/d/1AZO0BZwn1Aogj4f3PDNe1mhq8pKsXZxtrG--EIbP_-w/edit
 
