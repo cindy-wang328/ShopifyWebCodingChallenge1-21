@@ -41,12 +41,11 @@
 
 
 <script>
-var nominated = {}; // imdb id -> nominated result
-var nCount = 0;
-var ALERT_COUNT = 5;
-var searchResultsList = [];
-//var searchResults = {}; // imdb id -> search result
-$(document).ready(function () { // Load previous nominated results
+var nominated = {}; // imdb id -> nominated result; using imdb ids to identify the movies and set html ids
+var nCount = 0; // nominated count
+var ALERT_COUNT = 5; // Constant for 5, previously I thought we just display something when they're above 5 but still let them keep nominating, so it got named alert count
+var searchResultsList = []; // imdb ids of current search results
+$(document).ready(function () { // Load previous nominated results and previous search from localstorage
 	if (nCount < ALERT_COUNT) $("#atLeast5Alert").hide();
 
 	if (window.localStorage["nominated"]) {
@@ -62,7 +61,7 @@ $(document).ready(function () { // Load previous nominated results
 
 function setMoreThan5Alert() {
 	$("#atLeast5Alert").show();
-	// Disable all existing nominate buttons
+	// Disable all existing nominate buttons, change text if it's not nominated
 	for (let j = 0; j < searchResultsList.length; j++) {
 		if (!nominated.hasOwnProperty(searchResultsList[j]))
 			$("#nBtn_" + searchResultsList[j]).attr("disabled", true).text("Max 5 nominations");
@@ -92,7 +91,7 @@ function addToNominated(imdbID, isInitialization) {
 	rmBtn.click(function () {
 		delete nominated[imdbID];
 		if (window.localStorage["nominated"]) {
-			window.localStorage["nominated"] = JSON.stringify(nominated);
+			window.localStorage["nominated"] = JSON.stringify(nominated); // already deleted from "nominated" 
 		}
 
 		$("#nBtn_" + imdbID).attr("disabled", false);
@@ -123,7 +122,6 @@ function addToNominated(imdbID, isInitialization) {
 	nCount++;
 	if (nCount >= ALERT_COUNT) {
 		setMoreThan5Alert();
-
 	}
 }
 
@@ -134,15 +132,16 @@ $("#searchBox").on("input", function (e) {
 		resetSearchResult();
 		return; // cant call api or else it says invalid imdb id
 	}
-	// Call the API
+	// Call the API, needed <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"> since its not https
 	searchVal = $.trim(searchVal);
-	fetch('http://www.omdbapi.com/?apikey=4c2bb7d3&type=movie&s=' + searchVal)
+	fetch('http://www.omdbapi.com/?apikey=4c2bb7d3&type=movie&s=' + searchVal) // type=movie
 		.then(function (response) {
 			return response.json();
 		})
 		.then(function (myJson) {
 			resetSearchResult();
 			if (myJson["Response"] === "False") {
+				// Movie not found, or too many results, most likely
 				$("#searchResultsText").text("No results for \"" + searchVal + "\"")
 				var p = $(document.createElement("p"));
 				p.text(myJson["Error"]);
@@ -153,7 +152,9 @@ $("#searchBox").on("input", function (e) {
 
 				for (let i = 0; i < myJson["Search"].length; i++) {
 					let curResult = myJson["Search"][i];
-					searchResultsList.push(curResult["imdbID"]);
+					searchResultsList.push(curResult["imdbID"]); // this list used to enable/disable when max 5 is reached
+					
+					// Nominate button
 					var nominateBtn = $(document.createElement("button"));
 					nominateBtn.addClass("btn btn-primary");
 					nominateBtn.attr("disabled", nominated.hasOwnProperty(curResult["imdbID"]) || nCount >= ALERT_COUNT);
@@ -167,7 +168,8 @@ $("#searchBox").on("input", function (e) {
 						window.localStorage["nominated"] = JSON.stringify(nominated);
 						addToNominated(curResult["imdbID"]);
 					});
-
+					
+					// Text with title and year 
 					var textCard = $(document.createElement("div"));
 					textCard.addClass("card-body col-sm-6");
 					textCard.append($(document.createElement("h4")).text(curResult["Title"]).addClass("card-title"));
